@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,6 +96,9 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   LL_SYSTICK_EnableIT();
+  setvbuf(stdout, NULL, _IONBF, 0);
+  printf("Good afternoon\n\r");
+  printf("systemcoreclk = %ld\n\r", SystemCoreClock);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -241,7 +244,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+int _write (int fd, char * ptr, int len)
+{
+  int i;
 
+  for (i = 0; i < len; i++) {
+    while(!LL_USART_IsActiveFlag_TXE(USART1));
+    LL_USART_TransmitData8(USART1, *ptr++);
+    // SER_PutChar (*ptr++);
+  }
+  while (!LL_USART_IsActiveFlag_TC(USART1));
+  return (i);
+}
 /* USER CODE END 4 */
 
 /**

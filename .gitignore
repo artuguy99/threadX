@@ -9,7 +9,6 @@ CMakeScripts/
 CMakeLists.txt.user
 CMakeCache.txt
 Testing
-Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json

@@ -193,7 +193,7 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-  
+  __RAM_segment_used_end__ = .;  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
