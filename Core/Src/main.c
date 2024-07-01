@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "tx_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,10 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define DEMO_STACK_SIZE         1024
+#define DEMO_BYTE_POOL_SIZE     9120
+#define DEMO_BLOCK_POOL_SIZE    100
+#define DEMO_QUEUE_SIZE         100
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -50,11 +54,34 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+TX_THREAD               thread_0;
+TX_THREAD               thread_1;
 
+TX_BYTE_POOL            byte_pool_0;
+TX_BLOCK_POOL           block_pool_0;
+UCHAR                   memory_area[DEMO_BYTE_POOL_SIZE];
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void    thread_0_entry(ULONG thread_input)
+{
+  while(1)
+    {
+      printf("thread 0 is running ... \r\n");
+      tx_thread_sleep(100);
+    }
+}
+
+void    thread_1_entry(ULONG thread_input)
+{
+  while(1)
+    {
+      tx_thread_sleep(100);
+      printf("thread 1 is running ... \r\n");
+      
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -100,7 +127,8 @@ int main(void)
   printf("Good afternoon\n\r");
   printf("systemcoreclk = %ld\n\r", SystemCoreClock);
   /* USER CODE END 2 */
-
+    /* Enter the ThreadX kernel.  */
+    tx_kernel_enter();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -116,6 +144,38 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+void    tx_application_define(void *first_unused_memory)
+{
+
+CHAR    *pointer = TX_NULL;
+
+
+    /* Create a byte memory pool from which to allocate the thread stacks.  */
+    tx_byte_pool_create(&byte_pool_0, "byte pool 0", memory_area, DEMO_BYTE_POOL_SIZE);
+
+    /* Put system definition stuff in here, e.g. thread creates and other assorted
+       create information.  */
+
+    /* Allocate the stack for thread 0.  */
+    tx_byte_allocate(&byte_pool_0, (VOID **) &pointer, DEMO_STACK_SIZE, TX_NO_WAIT);
+
+    /* Create the main thread.  */
+    tx_thread_create(&thread_0, "thread 0", thread_0_entry, 0,  
+            pointer, DEMO_STACK_SIZE, 
+            1, 1, TX_NO_TIME_SLICE, TX_AUTO_START);
+
+    /* Allocate the stack for thread 1.  */
+    tx_byte_allocate(&byte_pool_0, (VOID **) &pointer, DEMO_STACK_SIZE, TX_NO_WAIT);
+
+    /* Create threads 1 and 2. These threads pass information through a ThreadX 
+       message queue.  It is also interesting to note that these threads have a time
+       slice.  */
+    tx_thread_create(&thread_1, "thread 1", thread_1_entry, 1,  
+            pointer, DEMO_STACK_SIZE, 
+            16, 16, 4, TX_AUTO_START);
+
 }
 
 /**
